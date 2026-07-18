@@ -1,0 +1,19 @@
+project: savantenvs/ucc162-3
+target: myc
+
+# myc is a file-input CLI: it compiles the given simplified-C source file and interprets it
+# on its bytecode VM (writes the <input>.s listing next to the staged input, which Mayhem
+# places in a writable location). Same target name + shape as the archived original
+# (`/myc @@`), rebuilt sanitized (ASan+UBSan, halting) from mayhem/build.sh.
+# myc strcpy()s its argv[1] into a char[80] (myc/src/c.cpp:101), so the crash depends on the
+# LENGTH of the input path, not its content: every input aborts there under Mayhem's long staging
+# path and masks the content-dependent defects behind it (lex.cpp). The target's entry point
+# (mayhem/myc_main.cc) hands upstream's main a short-named copy of @@, so this stays a plain `@@` target.
+cmds:
+  - cmd: /mayhem/build/myc @@
+
+# The Mayhem project slug is ucc162-3 (the '.' in the repo name is slugified), so the project
+# segment is spelled out: $MAYHEM_PROJECT would expand to the raw repo name ucc162.3 and 403.
+testsuite:
+  - https://app.mayhem.security/mayhemheroes/ucc162-3/$MAYHEM_TARGET/testsuite.tar
+  - file://mayhem/myc/testsuite
